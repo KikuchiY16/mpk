@@ -1,0 +1,7 @@
+.monitor_cache/
+__pycache__/
+*.pyc
+*.csv
+*.json.key
+*service_account*.json
+.env

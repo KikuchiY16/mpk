@@ -1,0 +1,66 @@
+name: monitor
+# 毎日2回起動(開催日でなければ数十秒で終了)。cronは遅延するので、起動後は run_day が自分でループして
+# 各レースの発走20分前・5分前に判定する。6時間制限があるので午前/午後に分割。
+on:
+  schedule:
+    - cron: "0 0 * * *"     # 09:00 JST  午前の部(〜12:50)
+    - cron: "50 3 * * *"    # 12:50 JST  午後の部(〜最終レース)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYY-MM-DD(空なら今日)"
+        required: false
+        default: ""
+      dry_run:
+        description: "シートに書かない"
+        type: boolean
+        default: true
+      min_racenum:
+        description: "このレース番号以上だけ監視"
+        required: false
+        default: "1"
+      until:
+        description: "HH:MM で終了(空なら最終レースまで)"
+        required: false
+        default: ""
+      youtube_video_id:
+        description: "YouTube配信の動画ID(空なら使わない)"
+        required: false
+        default: ""
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      TZ: Asia/Tokyo
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      SHEET_ID: ${{ secrets.SHEET_ID }}
+      YOUTUBE_VIDEO_ID: ${{ inputs.youtube_video_id || vars.YOUTUBE_VIDEO_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: run
+        env:
+          IN_DATE: ${{ inputs.date }}
+          IN_DRY: ${{ inputs.dry_run }}
+          IN_MIN: ${{ inputs.min_racenum }}
+          IN_UNTIL: ${{ inputs.until }}
+          EVENT: ${{ github.event_name }}
+          CRON: ${{ github.event.schedule }}
+        run: |
+          ARGS="--min_racenum ${IN_MIN:-1}"
+          [ -n "$IN_DATE" ] && ARGS="$ARGS --date $IN_DATE"
+          if [ "$EVENT" = "schedule" ]; then
+            [ "$CRON" = "0 0 * * *" ] && ARGS="$ARGS --until 12:50"
+          else
+            [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
+            [ "$IN_DRY" = "true" ] && ARGS="$ARGS --dry_run"
+          fi
+          python -u -m monitor.run_day $ARGS
