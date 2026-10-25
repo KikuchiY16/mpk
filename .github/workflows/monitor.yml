@@ -1,10 +1,15 @@
 name: monitor
-# 毎日2回起動(開催日でなければ数十秒で終了)。cronは遅延するので、起動後は run_day が自分でループして
-# 各レースの発走20分前・5分前に判定する。6時間制限があるので午前/午後に分割。
+# 毎日、午前・午後に複数回の起動を仕掛ける(開催日でなければ、または既に終わっていれば数十秒で終了)。
+# cronは遅延したり抜けたりするので、起動後は run_day が自分でループして各レースの発走20分前・5分前に判定する。
+# 6時間制限があるので午前/午後に分割。同時には1つだけ動き(concurrency)、後から来た起動は待つ。
 on:
   schedule:
-    - cron: "0 0 * * *"     # 09:00 JST  午前の部(〜12:50)
-    - cron: "50 3 * * *"    # 12:50 JST  午後の部(〜最終レース)
+    - cron: "30 23 * * *"   # 08:30 JST  午前の部(〜12:50)
+    - cron: "0 0 * * *"     # 09:00 JST  午前の部
+    - cron: "30 0 * * *"    # 09:30 JST  午前の部
+    - cron: "20 3 * * *"    # 12:20 JST  午後の部(〜最終レース)
+    - cron: "50 3 * * *"    # 12:50 JST  午後の部
+    - cron: "30 4 * * *"    # 13:30 JST  午後の部
   workflow_dispatch:
     inputs:
       date:
@@ -58,7 +63,9 @@ jobs:
           ARGS="--min_racenum ${IN_MIN:-1}"
           [ -n "$IN_DATE" ] && ARGS="$ARGS --date $IN_DATE"
           if [ "$EVENT" = "schedule" ]; then
-            [ "$CRON" = "0 0 * * *" ] && ARGS="$ARGS --until 12:50"
+            case "$CRON" in
+              "30 23 * * *"|"0 0 * * *"|"30 0 * * *") ARGS="$ARGS --until 12:50" ;;
+            esac
           else
             [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
             [ "$IN_DRY" = "true" ] && ARGS="$ARGS --dry_run"
