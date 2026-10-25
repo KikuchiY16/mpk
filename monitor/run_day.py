@@ -78,6 +78,9 @@ def main():
                         per_horse = bbs_watch.watch_race(e, session, driver, state, nb_args,
                                                          bbs_watch.Budget(args.max_requests))
                         rows = bbs_watch.to_rows(e, per_horse, now.isoformat(timespec="seconds"))
+                        st = bbs_watch.LAST_STATS
+                        print(f"{tag} netkeiba 掲示板{st.get('boards', 0)}枚 取得{st.get('parsed', 0)}件 "
+                              f"新しい{st.get('fresh', 0)}件")
                         print(f"{tag} netkeiba 印: { {r['horsenum']: r['flag'] for r in rows} or 'なし' }")
                         if not dry:
                             bbs_watch.write_sheet(pd.DataFrame(rows, columns=bbs_watch.FIELDS), [e["race_id"]], "netkeiba")

@@ -211,17 +211,28 @@ class RunLock:
             pass
 
 
+# 直近のレースの取得状況(件数だけ。ログで「印なし」が取得失敗なのか本当に無かったのかを区別する用)
+LAST_STATS = {}
+
+
+def _count(key, n=1):
+    LAST_STATS[key] = LAST_STATS.get(key, 0) + n
+
+
 def _ingest(st, comments, names, now, args):
     """未読コメントだけ判定して st["hits"] に積む。names={馬番: 馬名} があればレース掲示板扱いで、
     本文に馬名が出てくる馬へ帰属させる(戻り値: {馬番: [hit]})。無ければ単一板として st に積むだけ。"""
     known = set(st["ids"])
     new_hits = []
+    _count("boards")
+    _count("parsed", len(comments))
     for c in comments:
         if c["no"] in known:
             continue
         known.add(c["no"])
         if c["age_min"] is None or c["age_min"] > args.max_age_min:
             continue  # 古い/日時不明のコメントは印にしない
+        _count("fresh")
         hits = _classify(c["text"])
         if hits:
             best = max(hits, key=lambda h: h[1])
@@ -236,6 +247,7 @@ def _ingest(st, comments, names, now, args):
 def watch_race(entry, session, driver, state, args, budget):
     """1レース分を処理。戻り値: {馬番: [直近max_age_min以内のhit]}。"""
     rid = entry["race_id"]
+    LAST_STATS.clear()
     nk_id = entry.get("nk_race_id") or yahoo_lite.yahoo_to_netkeiba_race_id(
         rid, _dt.strptime(entry["date"], "%Y-%m-%d").date())
     host = args.host

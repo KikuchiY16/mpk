@@ -5,3 +5,10 @@ __pycache__/
 *.json.key
 *service_account*.json
 .env
+
+.claude/settings.local.json
+.monitor_cache/
+
+# 即PAT投票の実行時ファイル (screenshotsには購入限度額など口座情報が映る。購入記録はシートに保存)
+vote/ipat_screens/
+vote/ipat_purchase_log.csv
