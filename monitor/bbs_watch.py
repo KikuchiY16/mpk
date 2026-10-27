@@ -31,11 +31,11 @@ RACE_BOARD_URL = "https://{host}.netkeiba.com/race/bbs.html?race_id={race_id}&rf
 
 FIELDS = ["race_id", "source", "phase", "horsenum", "flag", "keywords", "n_hits", "latest_comment", "updated_at"]
 
-# (印, 重み, 正規表現)。重いほど警戒。
+# (印, 重み, 正規表現)。重いほど警戒。🔴=誰が見ても危ない状態 / 🟡=気配に注意 / ⚪=弱い兆候(サイトには出さず、bbs_logにだけ残す)
 KEYWORDS = [
     ("🔴", 3, r"暴れ|立ち上が|放馬|馬房.{0,3}(?:壊|暴)|疝痛|跛行|歩様.{0,3}(?:悪|乱|おかし)|故障|熱発|出走取消|競走除外"),
-    ("🟠", 2, r"イレ込|入れ込|いれこ|チャカ(?:つ|ツ)|落鉄|蹄鉄|カリカリ|うるさ|口を割|引っかか|折り合.{0,4}(?:欠|不安)|ゲート.{0,4}(?:嫌|出遅|立ち上)"),
-    ("🟡", 1, r"発汗|汗(?:をかい|びっしょり|だく)|テンション.{0,3}高|調整不足|仕上がり.{0,4}(?:甘|不十分|不足|悪|途上)|馬体.{0,3}(?:減|細)|細く見|気配.{0,3}(?:悪|いまいち|冴えない)|元気.{0,3}(?:ない|無い)|覇気.{0,3}(?:ない|無い)|やる気.{0,3}(?:ない|無い)|ガレ"),
+    ("🟡", 1, r"イレ込|入れ込|いれこ|チャカ(?:つ|ツ)|落鉄|蹄鉄|カリカリ|うるさ|口を割|引っかか|折り合.{0,4}(?:欠|不安)|ゲート.{0,4}(?:嫌|出遅|立ち上)"),
+    ("⚪", 0, r"発汗|汗(?:をかい|びっしょり|だく)|テンション.{0,3}高|調整不足|仕上がり.{0,4}(?:甘|不十分|不足|悪|途上)|馬体.{0,3}(?:減|細)|細く見|気配.{0,3}(?:悪|いまいち|冴えない)|元気.{0,3}(?:ない|無い)|覇気.{0,3}(?:ない|無い)|やる気.{0,3}(?:ない|無い)|ガレ"),
 ]
 # キーワード直後(または直前)の否定。例「暴れていない」「イレ込みなし」「落ち着いて」
 NEG_AFTER = re.compile(r"^.{0,6}?(?:ていない|てない|なし|無し|ず|なかった|ません|ないよう|ない)")
@@ -324,6 +324,8 @@ def to_rows(entry, per_horse, now_iso):
     for hn, hits in sorted(per_horse.items()):
         hits = sorted(hits, key=lambda h: h["t"])
         top = max(hits, key=lambda h: h["weight"])
+        if top["weight"] <= 0:
+            continue  # 弱い兆候だけの馬は印にしない(bbs_logには残る)
         words = sorted({w for h in hits for w in h["words"]})
         rows.append({"race_id": entry["race_id"], "source": "netkeiba", "phase": entry.get("phase", ""), "horsenum": hn, "flag": top["marks"][0],
                      "keywords": "/".join(words), "n_hits": len(hits),
@@ -332,19 +334,19 @@ def to_rows(entry, per_horse, now_iso):
 
 
 LOG_TAB = "bbs_log"
-LOG_FIELDS = ["date", "race_id", "source", "phase", "horsenum", "n_hits", "n_red", "n_orange", "n_yellow", "words", "logged_at"]
+LOG_FIELDS = ["date", "race_id", "source", "phase", "horsenum", "n_hits", "n_red", "n_yellow", "n_weak", "words", "logged_at"]
 
 
 def to_log_rows(entry, per_horse, now_iso):
     """印の重みづけを後で検証するための材料(件数とキーワードだけ。コメント本文は残さない)。"""
     rows = []
     for hn, hits in sorted(per_horse.items()):
-        cnt = {"🔴": 0, "🟠": 0, "🟡": 0}
+        cnt = {"🔴": 0, "🟡": 0, "⚪": 0}
         for h in hits:
             cnt[h["marks"][0]] += 1
         rows.append({"date": entry["date"], "race_id": entry["race_id"], "source": "netkeiba",
                      "phase": entry.get("phase", ""), "horsenum": hn, "n_hits": len(hits),
-                     "n_red": cnt["🔴"], "n_orange": cnt["🟠"], "n_yellow": cnt["🟡"],
+                     "n_red": cnt["🔴"], "n_yellow": cnt["🟡"], "n_weak": cnt["⚪"],
                      "words": "/".join(sorted({w for h in hits for w in h["words"]})), "logged_at": now_iso})
     return rows
 
