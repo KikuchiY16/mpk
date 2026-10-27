@@ -42,14 +42,30 @@ NEG_AFTER = re.compile(r"^.{0,6}?(?:ていない|てない|なし|無し|ず|な
 NEG_BEFORE = re.compile(r"(?:全然|全く|特に|あまり|別に|ほとんど).{0,2}$")
 
 
+# 今走の気配ではない話(同じ文に出てきたら除外): 前走以前・調整期間中・過去の出来事
+PAST = re.compile(r"前走|前々走|前回|前戦|前々回|前哨戦|過去|以前|昔|去年|昨年|先週|先月|中間|休み明け|休養|"
+                  r"(?:デビュー|新馬|初戦|[0-9０-９]走前|[0-9０-９]戦前)|あの時|いつも|毎回|癖|クセ|"
+                  r"(?:だった|でした)(?:が|けど|のに)")
+SENT_SPLIT = re.compile(r"[。！？!?\n]")
+
+
+def _sentence_of(text, pos):
+    """pos を含む文(区切り: 。！？改行)を返す。"""
+    start = max((m.end() for m in SENT_SPLIT.finditer(text, 0, pos)), default=0)
+    m = SENT_SPLIT.search(text, pos)
+    return text[start:(m.start() if m else len(text))]
+
+
 def _classify(text):
-    """コメント1件を判定。戻り値: [(印, 重み, ヒット語)]。否定が付いたヒットは除外。"""
+    """コメント1件を判定。戻り値: [(印, 重み, ヒット語)]。否定が付いたヒットと、前走など過去の話は除外。"""
     hits = []
     for mark, weight, pat in KEYWORDS:
         for m in re.finditer(pat, text):
             after = text[m.end():m.end() + 8]
             before = text[max(0, m.start() - 4):m.start()]
             if NEG_AFTER.match(after) or NEG_BEFORE.search(before):
+                continue
+            if PAST.search(_sentence_of(text, m.start())):
                 continue
             hits.append((mark, weight, m.group()))
     return hits
