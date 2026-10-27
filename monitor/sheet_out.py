@@ -32,3 +32,16 @@ def merge_write(df, race_ids, source, fields, tab):
     merged = pd.concat([old, df], ignore_index=True).reindex(columns=fields, fill_value="")
     ws.clear()
     ws.update([fields] + merged.astype(str).values.tolist(), "A1")
+
+
+def append_rows(tab, fields, rows):
+    """タブの末尾に追記(既存行は触らない)。判定の材料を貯めて、後で重みづけを検証するためのログ用。"""
+    import gspread
+    gc = gspread.service_account_from_dict(json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]))
+    sh = gc.open_by_key(os.environ["SHEET_ID"])
+    try:
+        ws = sh.worksheet(tab)
+    except gspread.WorksheetNotFound:
+        ws = sh.add_worksheet(title=tab, rows=2000, cols=len(fields))
+        ws.update([fields], "A1")
+    ws.append_rows([[r.get(f, "") for f in fields] for r in rows], value_input_option="RAW")

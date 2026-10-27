@@ -84,6 +84,12 @@ def main():
                         print(f"{tag} netkeiba 印: { {r['horsenum']: r['flag'] for r in rows} or 'なし' }")
                         if not dry:
                             bbs_watch.write_sheet(pd.DataFrame(rows, columns=bbs_watch.FIELDS), [e["race_id"]], "netkeiba")
+                            try:  # 重みづけ検証用のログ。失敗しても本体には影響させない
+                                from monitor import sheet_out
+                                sheet_out.append_rows(bbs_watch.LOG_TAB, bbs_watch.LOG_FIELDS,
+                                                      bbs_watch.to_log_rows(e, per_horse, now.isoformat(timespec="seconds")))
+                            except Exception as ex:  # noqa: BLE001
+                                print(f"{tag} ログ追記失敗: {type(ex).__name__}")
                         blocked = 0
                     except bbs_watch.BlockedError as ex:
                         blocked += 1

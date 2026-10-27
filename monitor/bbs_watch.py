@@ -315,6 +315,24 @@ def to_rows(entry, per_horse, now_iso):
     return rows
 
 
+LOG_TAB = "bbs_log"
+LOG_FIELDS = ["date", "race_id", "source", "phase", "horsenum", "n_hits", "n_red", "n_orange", "n_yellow", "words", "logged_at"]
+
+
+def to_log_rows(entry, per_horse, now_iso):
+    """印の重みづけを後で検証するための材料(件数とキーワードだけ。コメント本文は残さない)。"""
+    rows = []
+    for hn, hits in sorted(per_horse.items()):
+        cnt = {"🔴": 0, "🟠": 0, "🟡": 0}
+        for h in hits:
+            cnt[h["marks"][0]] += 1
+        rows.append({"date": entry["date"], "race_id": entry["race_id"], "source": "netkeiba",
+                     "phase": entry.get("phase", ""), "horsenum": hn, "n_hits": len(hits),
+                     "n_red": cnt["🔴"], "n_orange": cnt["🟠"], "n_yellow": cnt["🟡"],
+                     "words": "/".join(sorted({w for h in hits for w in h["words"]})), "logged_at": now_iso})
+    return rows
+
+
 def write_sheet(df, race_ids, source="netkeiba"):
     """(race_id, source)単位のread-merge-write(他レース・他ソース(youtube等)の既存行は保持)。"""
     from monitor.sheet_out import merge_write
