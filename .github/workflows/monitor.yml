@@ -60,6 +60,13 @@ jobs:
           EVENT: ${{ github.event_name }}
           CRON: ${{ github.event.schedule }}
         run: |
+          if [ -z "$YOUTUBE_VIDEO_ID" ]; then
+            D="${IN_DATE:-$(date +%F)}"
+            case "$D" in
+              2026-10-31) export YOUTUBE_VIDEO_ID=eKmAAki7N6c ;;
+              2026-11-01) export YOUTUBE_VIDEO_ID=MHOpP89yqUQ ;;
+            esac
+          fi
           ARGS="--min_racenum ${IN_MIN:-1}"
           [ -n "$IN_DATE" ] && ARGS="$ARGS --date $IN_DATE"
           if [ "$EVENT" = "schedule" ]; then
