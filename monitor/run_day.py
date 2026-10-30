@@ -1,6 +1,6 @@
 """
 1開催日ぶんの監視を1ジョブで回す(GitHub Actions用)。cronは遅延するので、朝に起動して
-最終レース(または --until)まで自分でループし、各レースの発走N分前(既定 20,5)に1回ずつ判定する。
+最終レース(または --until)まで自分でループし、各レースの発走N分前(既定 15,5)に1回ずつ判定する。
 
   python -m monitor.run_day --dry_run                       # 今日(JST)、シートに書かない
   python -m monitor.run_day --until 13:00 --min_racenum 1   # 午前だけ
@@ -30,7 +30,7 @@ def main():
     ap.add_argument("--date", default=None, help="YYYY-MM-DD(省略時は今日)")
     ap.add_argument("--until", default=None, help="HH:MM。これを過ぎたら終了(6時間制限の分割用)")
     ap.add_argument("--min_racenum", type=int, default=1)
-    ap.add_argument("--checkpoints", default="20,5")
+    ap.add_argument("--checkpoints", default="15,5")
     ap.add_argument("--tol_min", type=int, default=3)
     ap.add_argument("--interval", type=float, default=1.0)
     ap.add_argument("--max_requests", type=int, default=150)

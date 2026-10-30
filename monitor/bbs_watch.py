@@ -364,8 +364,8 @@ def main():
     ap.add_argument("--nk_race_id", default=None,
                     help="Netkeiba形式のrace_idを直接指定(スケジュール不要・シート書込なしの試験用。地方は--host nar)")
     ap.add_argument("--host", default="race", choices=["race", "nar"], help="race=JRA / nar=地方競馬")
-    ap.add_argument("--checkpoints", default="20,5",
-                    help="発走の何分前に確認するか(カンマ区切り)。既定: 20=パドック終わり頃, 5=返し馬後・締切前。"
+    ap.add_argument("--checkpoints", default="15,5",
+                    help="発走の何分前に確認するか(カンマ区切り)。既定: 15=パドック終わり頃, 5=返し馬後・締切前。"
                          "パドック終了時刻は場/レースで違うので実際に合わせて調整すること")
     ap.add_argument("--tol_min", type=int, default=4, help="チェックポイントを過ぎてから何分以内なら実行するか(取りこぼし許容)")
     ap.add_argument("--interval", type=float, default=1.0, help="リクエスト間の秒数(ブラウザ読み込み自体に1〜2秒かかるので実効間隔はこれより長い)")
