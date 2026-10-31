@@ -69,9 +69,11 @@ class LiveChat:
         m = _INIT.search(t)
         if not m:
             raise RuntimeError("ytInitialDataが見つかりません(ライブでない/チャット無効/仕様変更)")
-        lc = json.loads(m.group(1)).get("contents", {}).get("liveChatRenderer")
+        contents = json.loads(m.group(1)).get("contents", {})
+        lc = contents.get("liveChatRenderer")
         if not lc:
-            raise RuntimeError("liveChatRendererがありません(チャットが無効の配信、または終了済み)")
+            msg = json.dumps(contents.get("messageRenderer") or list(contents), ensure_ascii=False)[:100]
+            raise RuntimeError(f"liveChatRendererがありません(チャットが無効の配信、または終了済み) 応答={msg} HTTP長={len(t)}")
         self.key = re.search(r'"INNERTUBE_API_KEY":"([^"]+)"', t).group(1)
         self.ver = re.search(r'"INNERTUBE_CLIENT_VERSION":"([^"]+)"', t).group(1)
         return lc
