@@ -6,8 +6,17 @@ name: vote
 # まず手動で dry_run を流して、Actionsのランナーから即PATにログインできるかを確認すること。
 on:
   schedule:
-    - cron: "0 0 * * *"     # 09:00 JST 午前の部 (〜12:50)
-    - cron: "50 3 * * *"    # 12:50 JST 午後の部 (〜16:50)
+    - cron: "30 23 * * *"
+    - cron: "50 23 * * *"
+    - cron: "10 0 * * *"
+    - cron: "30 0 * * *"
+    - cron: "50 0 * * *"
+    - cron: "0 3 * * *"
+    - cron: "20 3 * * *"
+    - cron: "40 3 * * *"
+    - cron: "0 4 * * *"
+    - cron: "20 4 * * *"
+    - cron: "40 4 * * *"
   workflow_dispatch:
     inputs:
       ipat:
@@ -64,7 +73,10 @@ jobs:
         run: |
           UNTIL="$IN_UNTIL"
           if [ "$EVENT" = "schedule" ]; then
-            if [ "$CRON" = "0 0 * * *" ]; then UNTIL="12:50"; else UNTIL="16:50"; fi
+            case "$CRON" in
+              *" 23 * * *"|*" 0 * * *") UNTIL="12:50" ;;
+              *) UNTIL="16:50" ;;
+            esac
           fi
           ARGS=""
           [ -n "$UNTIL" ] && ARGS="--until $UNTIL"
