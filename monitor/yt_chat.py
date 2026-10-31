@@ -62,6 +62,9 @@ class LiveChat:
         self.video_id, self.debug = video_id, debug
         self.s = requests.Session()
         self.s.headers.update({"User-Agent": UA, "Accept-Language": "ja"})
+        # 同意画面(EU/一部データセンターIPで表示される)を避けるためのCookie
+        self.s.cookies.set("CONSENT", "YES+cb", domain=".youtube.com")
+        self.s.cookies.set("SOCS", "CAI", domain=".youtube.com")
         self.seen = set()
 
     def _init(self):
