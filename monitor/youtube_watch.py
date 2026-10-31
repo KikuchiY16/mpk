@@ -29,7 +29,7 @@ class ChatBuffer:
                 print("[youtube] 配信終了または切断。取り込みを停止")
                 return
             except Exception as e:  # noqa: BLE001
-                print(f"[youtube] 接続エラー: {type(e).__name__}。10秒後に再接続")
+                print(f"[youtube] 接続エラー: {type(e).__name__}: {str(e)[:120]}。10秒後に再接続")
                 time.sleep(10)
 
     def window(self, start, end):
