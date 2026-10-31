@@ -85,7 +85,6 @@ def main():
                         if not dry:
                             bbs_watch.write_sheet(pd.DataFrame(rows, columns=bbs_watch.FIELDS), [e["race_id"]], "netkeiba")
                             try:  # 重みづけ検証用のログ。失敗しても本体には影響させない
-                                from monitor import sheet_out
                                 sheet_out.append_rows(bbs_watch.LOG_TAB, bbs_watch.LOG_FIELDS,
                                                       bbs_watch.to_log_rows(e, per_horse, now.isoformat(timespec="seconds")))
                             except Exception as ex:  # noqa: BLE001
