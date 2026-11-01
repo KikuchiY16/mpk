@@ -73,10 +73,7 @@ jobs:
         run: |
           UNTIL="$IN_UNTIL"
           if [ "$EVENT" = "schedule" ]; then
-            case "$CRON" in
-              *" 23 * * *"|*" 0 * * *") UNTIL="12:50" ;;
-              *) UNTIL="16:50" ;;
-            esac
+            UNTIL="$(date -d '+330 minutes' +%H:%M)"
           fi
           ARGS=""
           [ -n "$UNTIL" ] && ARGS="--until $UNTIL"

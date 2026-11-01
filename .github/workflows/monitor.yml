@@ -75,10 +75,8 @@ jobs:
           ARGS="--min_racenum ${IN_MIN:-1}"
           [ -n "$IN_DATE" ] && ARGS="$ARGS --date $IN_DATE"
           if [ "$EVENT" = "schedule" ]; then
-            # cron の UTC 時刻が 午前(23時台〜0時台)なら 12:50 まで、午後なら最終レースまで
-            case "$CRON" in
-              *" 23 * * *"|*" 0 * * *") ARGS="$ARGS --until 12:50" ;;
-            esac
+            # cronは大幅に遅れる/抜けるので、どの起動も「起動から5時間30分後」まで動く(6時間制限の内側)
+            ARGS="$ARGS --until $(date -d '+330 minutes' +%H:%M)"
           else
             [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
             [ "$IN_DRY" = "true" ] && ARGS="$ARGS --dry_run"
