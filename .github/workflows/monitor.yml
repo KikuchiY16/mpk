@@ -68,8 +68,8 @@ jobs:
           if [ -z "$YOUTUBE_VIDEO_ID" ]; then
             D="${IN_DATE:-$(date +%F)}"
             case "$D" in
-              2026-10-31) export YOUTUBE_VIDEO_ID=eKmAAki7N6c ;;
-              2026-11-01) export YOUTUBE_VIDEO_ID=MHOpP89yqUQ ;;
+              2026-11-07) export YOUTUBE_VIDEO_ID=jcT0LZc_oVw ;;
+              2026-11-08) export YOUTUBE_VIDEO_ID=pYXNOFe5hUM ;;
             esac
           fi
           ARGS="--min_racenum ${IN_MIN:-1}"
