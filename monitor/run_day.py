@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
-from monitor import bbs_watch, sheet_out, yahoo_lite, youtube_watch
+from monitor import bbs_watch, notify, sheet_out, yahoo_lite, youtube_watch
 
 
 def jst_now():
@@ -56,6 +56,9 @@ def main():
     print(f"チェックポイント={cps}分前 / シート書込={'しない(dry)' if dry else 'する'} / "
           f"YouTube={'あり' if args.youtube_video_id else 'なし'} / 終了={until or last_end}")
 
+    if not args.youtube_video_id and not dry and jst_now() < last_end - timedelta(minutes=30):
+        notify.send_once(f"no_youtube_{today}", f"【mpk】{today} の YouTube 動画IDが未設定です。"
+                         "monitor.yml の日付別IDに追加するか、手動実行の youtube_video_id に入れてください(Netkeiba 監視は動いています)。")
     yt = None
     if args.youtube_video_id:
         yt = youtube_watch.ChatBuffer(args.youtube_video_id)

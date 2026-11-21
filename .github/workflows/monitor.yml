@@ -48,6 +48,8 @@ jobs:
       TZ: Asia/Tokyo
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
       SHEET_ID: ${{ secrets.SHEET_ID }}
+      LINE_ACCESS_TOKEN: ${{ secrets.LINE_ACCESS_TOKEN }}
+      LINE_TO_USER_ID: ${{ secrets.LINE_TO_USER_ID }}
       YOUTUBE_VIDEO_ID: ${{ inputs.youtube_video_id || vars.YOUTUBE_VIDEO_ID }}
     steps:
       - uses: actions/checkout@v4
