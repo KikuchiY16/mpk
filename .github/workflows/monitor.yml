@@ -72,6 +72,8 @@ jobs:
             case "$D" in
               2026-11-07) export YOUTUBE_VIDEO_ID=jcT0LZc_oVw ;;
               2026-11-08) export YOUTUBE_VIDEO_ID=pYXNOFe5hUM ;;
+              2026-11-22) export YOUTUBE_VIDEO_ID=G2ZKZ0XqZCY ;;
+              2026-11-23) export YOUTUBE_VIDEO_ID=PYArsRaI-hw ;;
             esac
           fi
           ARGS="--min_racenum ${IN_MIN:-1}"
