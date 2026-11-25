@@ -237,7 +237,6 @@ class RunLock:
 
 # 直近のレースの取得状況(件数だけ。ログで「印なし」が取得失敗なのか本当に無かったのかを区別する用)
 LAST_STATS = {}
-LAST_COUNTS = {}  # {馬番: (掲示板のコメント数, 直近のコメント数)}。印の付かなかった馬も含む(bbs_logの分母用)
 
 
 def _count(key, n=1):
@@ -266,9 +265,6 @@ def _ingest(st, comments, names, now, args):
                              "t": (now - timedelta(minutes=c["age_min"])).isoformat(timespec="seconds"),
                              "text_full": c["text"]})
     st["ids"] = sorted(known, key=int)
-    # 印の付く割合を出すための分母(掲示板に載っているコメント数と、直近max_age_min以内の数)
-    st["n_parsed"] = len(comments)
-    st["n_recent"] = sum(1 for c in comments if c["age_min"] is not None and c["age_min"] <= args.max_age_min)
     return new_hits
 
 
@@ -276,7 +272,6 @@ def watch_race(entry, session, driver, state, args, budget):
     """1レース分を処理。戻り値: {馬番: [直近max_age_min以内のhit]}。"""
     rid = entry["race_id"]
     LAST_STATS.clear()
-    LAST_COUNTS.clear()
     nk_id = entry.get("nk_race_id") or yahoo_lite.yahoo_to_netkeiba_race_id(
         rid, _dt.strptime(entry["date"], "%Y-%m-%d").date())
     host = args.host
@@ -316,7 +311,6 @@ def watch_race(entry, session, driver, state, args, budget):
     cutoff = (now - timedelta(minutes=args.max_age_min)).isoformat(timespec="seconds")
     result = {}
     for hn, st in per_horse.items():
-        LAST_COUNTS[hn] = (st.get("n_parsed", 0), st.get("n_recent", 0))
         st["hits"] = [x for x in st["hits"] if x["t"] >= cutoff]  # 古くなった印は落とす
         if st["hits"]:
             result[hn] = st["hits"]
@@ -348,25 +342,20 @@ def to_rows(entry, per_horse, now_iso):
 
 
 LOG_TAB = "bbs_log"
-LOG_FIELDS = ["date", "race_id", "source", "phase", "horsenum", "n_hits", "n_red", "n_yellow", "n_weak", "words", "logged_at",
-              "n_comments", "n_recent"]
+LOG_FIELDS = ["date", "race_id", "source", "phase", "horsenum", "n_hits", "n_red", "n_yellow", "n_weak", "words", "logged_at"]
 
 
 def to_log_rows(entry, per_horse, now_iso):
-    """印の重みづけを後で検証するための材料(件数とキーワードだけ。コメント本文は残さない)。
-    印の付かなかった馬も1行ずつ残す(n_hits=0)。n_comments=掲示板のコメント数, n_recent=直近のコメント数。"""
+    """印の重みづけを後で検証するための材料(件数とキーワードだけ。コメント本文は残さない)。"""
     rows = []
-    for hn in sorted(set(per_horse) | set(LAST_COUNTS)):
-        hits = per_horse.get(hn, [])
+    for hn, hits in sorted(per_horse.items()):
         cnt = {"🔴": 0, "🟡": 0, "⚪": 0}
         for h in hits:
             cnt[h["marks"][0]] += 1
-        n_parsed, n_recent = LAST_COUNTS.get(hn, ("", ""))
         rows.append({"date": entry["date"], "race_id": entry["race_id"], "source": "netkeiba",
                      "phase": entry.get("phase", ""), "horsenum": hn, "n_hits": len(hits),
                      "n_red": cnt["🔴"], "n_yellow": cnt["🟡"], "n_weak": cnt["⚪"],
-                     "words": "/".join(sorted({w for h in hits for w in h["words"]})), "logged_at": now_iso,
-                     "n_comments": n_parsed, "n_recent": n_recent})
+                     "words": "/".join(sorted({w for h in hits for w in h["words"]})), "logged_at": now_iso})
     return rows
 
 
