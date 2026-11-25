@@ -41,6 +41,10 @@ def append_rows(tab, fields, rows):
     sh = gc.open_by_key(os.environ["SHEET_ID"])
     try:
         ws = sh.worksheet(tab)
+        if ws.row_values(1) != fields:  # 列を足した時は見出し行だけ更新(既存の行は触らない)
+            if ws.col_count < len(fields):
+                ws.add_cols(len(fields) - ws.col_count)
+            ws.update([fields], "A1")
     except gspread.WorksheetNotFound:
         ws = sh.add_worksheet(title=tab, rows=2000, cols=len(fields))
         ws.update([fields], "A1")
