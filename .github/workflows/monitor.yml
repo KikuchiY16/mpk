@@ -74,6 +74,9 @@ jobs:
               2026-11-08) export YOUTUBE_VIDEO_ID=pYXNOFe5hUM ;;
               2026-11-22) export YOUTUBE_VIDEO_ID=G2ZKZ0XqZCY ;;
               2026-11-23) export YOUTUBE_VIDEO_ID=PYArsRaI-hw ;;
+              2026-11-28) export YOUTUBE_VIDEO_ID=5IoQEmEZrwY ;;
+              2026-11-29) export YOUTUBE_VIDEO_ID=rl52ECsdWaM ;;
+              2026-11-30) export YOUTUBE_VIDEO_ID=hNLuHKiUwVU ;;
             esac
           fi
           ARGS="--min_racenum ${IN_MIN:-1}"
